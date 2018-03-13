@@ -10,7 +10,9 @@ api = Api(
     title=descriptions.api['title'],
     description=descriptions.api['description'],
     default='admin_addr',
-    default_label='Admin Address')
+    default_label='Admin Address',
+    version='0.2.0')
+query = api.namespace('query_addr')
 
 application_fields = api.model(
     'Application', {
@@ -106,7 +108,9 @@ verbose_field = api.model(
     'Verbosity', {
         'verbose':
         fields.Boolean(
-            required=True, description=descriptions.misc['boolean'])
+            required=True, 
+            description=descriptions.misc['boolean'],
+            example='true')
     })
 
 name_field = api.model(
@@ -154,6 +158,29 @@ replica_field = api.model(
             description=descriptions.model['version'])
     })
 
+input_field = query.model(
+    'Query Input', {
+        'input': fields.List(fields.Raw(
+                        example=2.3), description='The query input as list.', required=True)
+    }
+)
+
+query_response_field = query.model(
+    'Query Result', {
+        'default': fields.Boolean(
+            example='false',
+            description='Whether or not this result is default response due to SLO'
+        ), 
+        'output': fields.Raw(
+            example=2.2,
+            description='The prediction output.'
+        ),
+        'query_id': fields.Integer(
+            example=42,
+            descriptions='The query id by application'
+        )
+    }
+)
 
 @api.route('/dump')
 @api.hide
@@ -168,6 +195,7 @@ class Dump(Resource):
 class AddApplication(Resource):
     @api.expect(application_fields)
     @api.response(200, 'OK')
+    @api.response(400, 'Bad Request')
     def post(self):
         """add_app
 
@@ -185,6 +213,7 @@ class AddApplication(Resource):
 class SetModelVersion(Resource):
     @api.expect(model_version_fileds)
     @api.response(200, 'OK')
+    @api.response(400, 'Bad Request')
     def post(self):
         """set_model_version
         
@@ -207,6 +236,7 @@ class SetModelVersion(Resource):
 class AddModelLinks(Resource):
     @api.expect(app_model_link_fields)
     @api.response(200, 'OK')
+    @api.response(400, 'Bad Request')
     def post(self):
         """add_model_links
 
@@ -225,6 +255,7 @@ class AddModelLinks(Resource):
 class AddModel(Resource):
     @api.expect(model_fields)
     @api.response(200, 'OK')
+    @api.response(400, 'Bad Request')
     def post(self):
         """add_model
 
@@ -235,7 +266,7 @@ class AddModel(Resource):
         with Clipper before it can be linked to an application.
 
         You should rarely have to use this method directly. Using one the Clipper deployer
-        methods in :py:mod:`clipper_admin.deployers` or calling ``build_and_deploy_model`` or
+        methods in `clipper_admin.deployers` or calling ``build_and_deploy_model`` or
         ``deploy_model`` will automatically register your model with Clipper.
         """
         pass
@@ -245,22 +276,19 @@ class AddModel(Resource):
 class GETAllAPP(Resource):
     @api.expect(verbose_field)
     @api.marshal_list_with(application_fields)
+    @api.response(400, 'Bad Request')
     def post(self):
         """get_all_applications
 
         Gets information about all applications registered with Clipper.
         
-        verbose : bool
-            If set to False, the returned list contains the apps' names.
-            If set to True, the list contains application info dictionaries.
-            These dictionaries have the same attribute name-value pairs that were
-            provided to `clipper_admin.ClipperConnection.register_application`.
+        If 'verbose' is set to False, the returned list contains the apps' names; 
+        if 'verbose' set to True, the list contains application info dictionaries.
+        These dictionaries have the same attribute name-value pairs that were
+        provided to `clipper_admin.ClipperConnection.register_application`.
 
-        Returns
-        
-        list
-            Returns a list of information about all apps registered to Clipper.
-            If no apps are registered with Clipper, an empty list is returned.
+        Returns a list of information about all apps registered to Clipper.
+        If no apps are registered with Clipper, an empty list is returned.
         """
         pass
 
@@ -269,22 +297,19 @@ class GETAllAPP(Resource):
 class GetApp(Resource):
     @api.expect(name_field)
     @api.marshal_with(application_fields)
+    @api.response(400, 'Bad Request')
     def post(self):
         """get_application
 
         Gets detailed information about a registered application.
         
-        name : str
-            The name of the application to look up
+        'name' parameter is the name of the application to look up.
 
-        Returns
-
-        dict
-            Returns a dictionary with the specified application's info. This
-            will contain the attribute name-value pairs that were provided to
-            `clipper_admin.ClipperConnection.register_application`.
-            If no application with name ``name`` is
-            registered with Clipper, None is returned.
+        Returns a dictionary with the specified application's info. This
+        will contain the attribute name-value pairs that were provided to
+        `clipper_admin.ClipperConnection.register_application`.
+        If no application with name ``name`` is
+        registered with Clipper, None is returned.
         """
         pass
 
@@ -293,19 +318,16 @@ class GetApp(Resource):
 class GetLinkedModel(Resource):
     @api.expect(app_name_field)
     @api.marshal_list_with(fields.String(example="Model Name"))
+    @api.response(400, 'Bad Request')
     def post(self):
         """get_linked_models
 
         Retrieves the models linked to the specified application.
 
-        app_name : str
-            The name of the application
+        'app_name' parameter is the name of the application
 
-        Returns
-
-        list
-            Returns a list of the names of models linked to the app.
-            If no models are linked to the specified app, None is returned.
+        Returns a list of the names of models linked to the app.
+        If no models are linked to the specified app, None is returned.
         """
         pass
 
@@ -314,20 +336,17 @@ class GetLinkedModel(Resource):
 class GetAppModel(Resource):
     @api.expect(verbose_field)
     @api.marshal_list_with(model_fields)
+    @api.response(400, 'Bad Request')
     def post(self):
         """get_all_models
 
         Gets information about all models registered with Clipper.
 
-        verbose : bool
-            If set to False, the returned list contains the models' names.
-            If set to True, the list contains model info dictionaries.
+        If 'verbose' is set to False, the returned list contains the models' names.
+        If 'verbose' set to True, the list contains model info dictionaries.
 
-        Returns
-
-        list
-            Returns a list of information about all apps registered to Clipper.
-            If no models are registered with Clipper, an empty list is returned.
+        Returns a list of information about all apps registered to Clipper.
+        If no models are registered with Clipper, an empty list is returned.
         """
         pass
 
@@ -336,23 +355,19 @@ class GetAppModel(Resource):
 class GetModel(Resource):
     @api.expect(model_version_fileds)
     @api.marshal_with(model_fields)
+    @api.response(400, 'Bad Request')
     def post(self):
         """get_model
 
         Gets detailed information about a registered model.
 
-        model_name : str
-            The name of the model to look up
+        'model_name' is the name of the model to look up
 
-        model_version : int
-            The version of the model to look up
+        'model_version' is the version of the model to look up
 
-        Returns
-
-        dict
-            Returns a dictionary with the specified model's info.
-            If no model with name `model_name@model_version` is
-            registered with Clipper, None is returned.
+        Returns a dictionary with the specified model's info.
+        If no model with name `model_name@model_version` is
+        registered with Clipper, None is returned.
         """
         pass
 
@@ -361,22 +376,17 @@ class GetModel(Resource):
 class GetAllContainers(Resource):
     @api.expect(verbose_field)
     @api.marshal_list_with(replica_field)
+    @api.response(400, 'Bad Request')
     def post(self):
         """get_all_containers
         
         Gets information about all model containers registered with Clipper.
 
-        Parameters
+        If 'verbose' is set to False, the returned list contains the apps' names.
+        If 'verbose' is set to True, the list contains container info dictionaries.
 
-        verbose : bool
-            If set to False, the returned list contains the apps' names.
-            If set to True, the list contains container info dictionaries.
-
-        Returns
-
-        list
-            Returns a list of information about all model containers known to Clipper.
-            If no containers are registered with Clipper, an empty list is returned.
+        Returns a list of information about all model containers known to Clipper.
+        If no containers are registered with Clipper, an empty list is returned.
         """
         pass
 
@@ -385,26 +395,36 @@ class GetAllContainers(Resource):
 class GetContainer(Resource):
     @api.expect(replica_field)
     @api.marshal_with(replica_field)
+    @api.response(400, 'Bad Request')
     def post(self):
         """get_container
 
         Gets detailed information about a registered container.
 
-        Parameters
+        'name' is the name of the container to look up
 
-        name : str
-            The name of the container to look up
+        'version' is the version of the container to look up
 
-        version : int
-            The version of the container to look up
+        'replica_id' is the container replica to look up
 
-        replica_id : int
-            The container replica to look up
+        Returns a dictionary with the specified container's info.
+        If no corresponding container is registered with Clipper, None is returned.
+        """
+        pass
 
-        Returns
 
-            A dictionary with the specified container's info.
-            If no corresponding container is registered with Clipper, None is returned.
+
+@query.route('/<string:application_name>/predict')
+@query.param('application_name', 'The name of appplication to query.')
+class Metric(Resource):
+    @query.expect(input_field)
+    @query.marshal_with(query_response_field)
+    @query.response(400, 'Bad Request')
+    def post(self):
+        """predict
+
+        Submit a new query to application. The application name needs to specified in 
+        the path; and data needs to be submitted via a POST Json request. 
         """
         pass
 

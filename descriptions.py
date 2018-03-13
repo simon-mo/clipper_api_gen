@@ -1,9 +1,9 @@
 model = dict(
-    name="The name of the deployed model",
+    name="The name of the deployed model. The model name must be valid DNS-1123 subdomains. Each must consist of lower case alphanumeric characters, ‘-‘ or ‘.’, and must start and end with an alphanumeric character (e.g. ‘example.com’, regex used for validation is `[a-z0-9]([-a-z0-9]*[a-z0-9])?\Z`.",
     version=
-    "The version to assign this model. Versions must be unique on a per-model basis, but may be re-used across different models.",
+    "The version to assign this model. Versions must be unique on a per-model basis, but may be re-used across different models. The model version must be valid DNS-1123 subdomains. Each must consist of lower case alphanumeric characters, ‘-‘ or ‘.’, and must start and end with an alphanumeric character (e.g. ‘example.com’, regex used for validation is `[a-z0-9]([-a-z0-9]*[a-z0-9])?\Z`.",
     input_type=
-    'The type of the request data this endpoint can process. Input type can be one of "integers", "floats", "doubles", "bytes", or "strings". See the `User Guide <http://clipper.ai/user_guide/#input-types>`_ for more details on picking the right input type for your application.',
+    'The type of the request data this endpoint can process. Input type can be one of "integers", "floats", "doubles", "bytes", or "strings". See the http://clipper.ai/tutorials/basic_concepts/#input-types for more details on picking the right input type for your application.',
     image=
     "A docker image name. If provided, the image will be recorded as part of the model descrtipin in Clipper when registering the model but this method will make no attempt to launch any containers with this image.",
     labels=
@@ -32,5 +32,5 @@ misc = dict(
 api = dict(
     title="Clipper API",
     description=
-    "REST API for instrumenting with Clipper. \nThe admin address can be obtained from querying ClipperConnection.cm.get_admin_addr()"
+    "REST API for instrumenting with Clipper. \n\nThere are two frontend avaliable for query. \n- In admin frontend, you can manage your applications and models. \n- In query frontend, you can send query to depolyed models. \n\nThe admin address can be obtained from querying `ClipperConnection.cm.get_admin_addr()`. \n\nThe query address can be obtained from querying `ClipperConnection.cm.get_query_addr()`."
 )
